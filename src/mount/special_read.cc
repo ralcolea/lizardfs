@@ -180,17 +180,36 @@ static std::vector<uint8_t> read(const Context &ctx,
 }
 } // InodeTweaks
 
+namespace InodeLogCrash {
+static std::vector<uint8_t> read(const Context &ctx,
+		size_t size, off_t off, FileInfo */*fi*/, int debug_mode) {
+	if (debug_mode) {
+		printDebugReadInfo(ctx, SPECIAL_INODE_LOGCRASH, size, off);
+	}
+	
+	// Hello world crash!!!
+	static const char *content = "Hello world crash!!!\n";
+	uint32_t ssize = strlen(content);
+
+	// offset outside of interval
+	if (off >= ssize) return std::vector<uint8_t>();
+
+	// Return partial or complete Hello world crash!!! message
+	return std::vector<uint8_t>(content + off, content + ssize);
+}
+} // InodeLogCrash
+
 static const std::array<std::function<std::vector<uint8_t>
 	(const Context&, size_t, off_t, FileInfo*, int)>, 16> funcs = {{
 	 &InodeStats::read,             //0x0U
 	 &InodeOplog::read,             //0x1U
 	 &InodeOphistory::read,         //0x2U
 	 &InodeTweaks::read,            //0x3U
+	 nullptr,                       //0x4U
 	 nullptr,                       //0x5U
 	 nullptr,                       //0x6U
 	 nullptr,                       //0x7U
-	 nullptr,                       //0x8U
-	 nullptr,                       //0x9U
+	 &InodeLogCrash::read,          //0x8U
 	 nullptr,                       //0xAU
 	 nullptr,                       //0xBU
 	 nullptr,                       //0xCU

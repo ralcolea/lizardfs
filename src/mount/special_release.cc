@@ -92,17 +92,25 @@ static void release(FileInfo *fi) {
 }
 } // InodeTweaks
 
+namespace InodeLogCrash {
+static void release(FileInfo *fi) {
+	oplog_releasehandle(fi->fh);
+	oplog_printf("release (%lu) (internal node: LOG_CRASH_FILE): OK",
+	            (unsigned long int)inode_);
+}
+} // InodeLogCrash
+
 typedef void (*ReleaseFunc)(FileInfo *);
 static const std::array<ReleaseFunc, 16> funcs = {{
 	 &InodeStats::release,          //0x0U
 	 &InodeOplog::release,          //0x1U
 	 &InodeOphistory::release,      //0x2U
 	 &InodeTweaks::release,         //0x3U
+	 nullptr,                       //0x4U
 	 nullptr,                       //0x5U
 	 nullptr,                       //0x6U
 	 nullptr,                       //0x7U
-	 nullptr,                       //0x8U
-	 nullptr,                       //0x9U
+	 &InodeLogCrash::release,       //0x8U
 	 nullptr,                       //0xAU
 	 nullptr,                       //0xBU
 	 nullptr,                       //0xCU
