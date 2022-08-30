@@ -27,22 +27,47 @@ test_error_cleanup() {
 
 cd ${info[mount0]}
 
+#set -x
+
 mkdir $TEMP_DIR/mnt/nfs3
 mkdir $TEMP_DIR/mnt/nfs4
 mkdir $TEMP_DIR/mnt/nfs41
 mkdir ganesha
 
-cp -R "$SOURCE_DIR"/external/nfs-ganesha-2.5-stable nfs-ganesha-2.5-stable
-cp -R "$SOURCE_DIR"/external/ntirpc-1.5 ntirpc-1.5
+# cp -R "$SOURCE_DIR"/external/nfs-ganesha-2.5-stable nfs-ganesha-2.5-stable
+cp -R "$SOURCE_DIR"/external/nfs-ganesha-4.0 nfs-ganesha-4.0
+# cp -R "$SOURCE_DIR"/external/ntirpc-1.5 ntirpc-1.5
+cp -R "$SOURCE_DIR"/external/ntirpc-4.0 ntirpc-4.0
 
-rm -R nfs-ganesha-2.5-stable/src/libntirpc
-ln -s ../../ntirpc-1.5 nfs-ganesha-2.5-stable/src/libntirpc
+# rm -R nfs-ganesha-2.5-stable/src/libntirpc
+rm -R nfs-ganesha-4.0/src/libntirpc
+# ln -s ../../ntirpc-1.5 nfs-ganesha-2.5-stable/src/libntirpc
+ln -s ../../ntirpc-4.0 nfs-ganesha-4.0/src/libntirpc
 
-mkdir nfs-ganesha-2.5-stable/src/build
-cd nfs-ganesha-2.5-stable/src/build
-CC="ccache gcc" cmake -DCMAKE_INSTALL_PREFIX=${info[mount0]} ..
+# mkdir nfs-ganesha-2.5-stable/src/build
+mkdir nfs-ganesha-4.0/src/build
+# cd nfs-ganesha-2.5-stable/src/build
+cd nfs-ganesha-4.0/src/build
+CC="ccache gcc" cmake -DCMAKE_INSTALL_PREFIX=${info[mount0]} -DLIZARDFS_CLIENT_LIB=/opt/lizardfs/lib/liblizardfs-client.so ..
 make -j${PARALLEL_JOBS} install
 cp ${LIZARDFS_ROOT}/lib/ganesha/libfsallizardfs* ${info[mount0]}/lib/ganesha
+
+cp /opt/lizardfs/lib/liblizardfs-client* ${info[mount0]}/lib/ganesha
+
+echo "Ejecutando LS"
+ls -l ${info[mount0]}/lib/ganesha
+
+# export PATH="/opt/lizardfs/lib:$PATH"
+# echo $PATH
+#exit 0
+#cp ${LIZARDFS_ROOT}/lib/ganesha/libfsallizardfs* ${info[mount0]}/usr/lib/ganesha
+
+
+# export LD_LIBRARY_PATH=/opt/lizardfs/lib
+#EXPORT LD_LIBRARY_PATH=/opt/lizardfs/lib:$LD_LIBRARY_PATH
+
+# Copying Lizardfs Client Lib (liblizardfs-client.so)
+# cp ${LIZARDFS_ROOT}/lib/liblizardfs-client* ${info[mount0]}/lib
 
 # mkdir ${info[mount0]}/ntirpc-1.5/build
 # cd ${info[mount0]}/ntirpc-1.5/build
@@ -74,6 +99,9 @@ NFSV4 {
 	Grace_Period = 5;
 }
 EOF
+
+# Export of Lizardfs Client Lib (liblizardfs-client.so)
+# export LD_LIBRARY_PATH=/opt/lizardfs/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 
 sudo ${info[mount0]}/bin/ganesha.nfsd -f ${info[mount0]}/etc/ganesha/ganesha.conf
 sudo mount -o nfsvers=4 localhost:/ $TEMP_DIR/mnt/nfs4

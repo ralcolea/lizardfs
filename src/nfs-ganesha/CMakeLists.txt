@@ -16,6 +16,8 @@
 
 collect_sources(NFS_GANESHA_PLUGIN)
 
+add_definitions(-D__USE_MISC)
+
 include_directories(${CMAKE_SOURCE_DIR}/external/${NFS_GANESHA_DIR_NAME}/src/include)
 include_directories(${CMAKE_SOURCE_DIR}/external/${NTIRPC_DIR_NAME}/ntirpc)
 

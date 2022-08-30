@@ -30,17 +30,27 @@ cd ${info[mount0]}
 mkdir $TEMP_DIR/mnt/nfs{1,2,97,99}
 mkdir ganesha
 
-cp -R "$SOURCE_DIR"/external/nfs-ganesha-2.5-stable nfs-ganesha-2.5-stable
-cp -R "$SOURCE_DIR"/external/ntirpc-1.5 ntirpc-1.5
+# cp -R "$SOURCE_DIR"/external/nfs-ganesha-2.5-stable nfs-ganesha-2.5-stable
+cp -R "$SOURCE_DIR"/external/nfs-ganesha-4.0 nfs-ganesha-4.0
+# cp -R "$SOURCE_DIR"/external/ntirpc-1.5 ntirpc-1.5
+cp -R "$SOURCE_DIR"/external/ntirpc-4.0 ntirpc-4.0
 
-rm -R nfs-ganesha-2.5-stable/src/libntirpc
-ln -s ../../ntirpc-1.5 nfs-ganesha-2.5-stable/src/libntirpc
+# rm -R nfs-ganesha-2.5-stable/src/libntirpc
+rm -R nfs-ganesha-4.0/src/libntirpc
+# ln -s ../../ntirpc-1.5 nfs-ganesha-2.5-stable/src/libntirpc
+ln -s ../../ntirpc-4.0 nfs-ganesha-4.0/src/libntirpc
 
-mkdir nfs-ganesha-2.5-stable/src/build
-cd nfs-ganesha-2.5-stable/src/build
+# mkdir nfs-ganesha-2.5-stable/src/build
+mkdir nfs-ganesha-4.0/src/build
+# cd nfs-ganesha-2.5-stable/src/build
+cd nfs-ganesha-4.0/src/build
+
 CC="ccache gcc" cmake -DCMAKE_INSTALL_PREFIX=${info[mount0]} ..
 make -j${PARALLEL_JOBS} install
 cp ${LIZARDFS_ROOT}/lib/ganesha/libfsallizardfs* ${info[mount0]}/lib/ganesha
+
+# Copying Lizardfs Client Lib (liblizardfs-client.so)
+cp ${LIZARDFS_ROOT}/lib/liblizardfs-client* ${info[mount0]}/lib
 
 # mkdir ${info[mount0]}/ntirpc-1.5/build
 # cd ${info[mount0]}/ntirpc-1.5/build
@@ -118,6 +128,9 @@ mkdir ${info[mount0]}/export{1,2}
 
 touch ${info[mount0]}/export1/test1
 touch ${info[mount0]}/export2/test2
+
+# Export of Lizardfs Client Lib (liblizardfs-client.so)
+# export LD_LIBRARY_PATH=/opt/lizardfs/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 
 sudo ${info[mount0]}/bin/ganesha.nfsd -f ${info[mount0]}/etc/ganesha/ganesha.conf
 

@@ -82,32 +82,50 @@ struct lzfs_fsal_ds_handle {
 	liz_fileinfo_entry_t *cache_handle;
 };
 
-#define LZFS_LEASE_TIME 10
-#define LZFS_SUPPORTED_ATTRS                                                                    \
-	(ATTR_TYPE | ATTR_SIZE | ATTR_FSID | ATTR_FILEID | ATTR_MODE | ATTR_NUMLINKS | ATTR_OWNER | \
-	 ATTR_GROUP | ATTR_ATIME | ATTR_CTIME | ATTR_MTIME | ATTR_CHGTIME | ATTR_CHANGE |           \
-	 ATTR_SPACEUSED | ATTR_RAWDEV | ATTR_ACL)
+#define LZFS_SUPPORTED_ATTRS                                        \
+    (ATTR_TYPE | ATTR_SIZE | ATTR_FSID | ATTR_FILEID | ATTR_MODE |  \
+     ATTR_NUMLINKS | ATTR_OWNER | ATTR_GROUP | ATTR_ATIME |         \
+     ATTR_CTIME | ATTR_MTIME | ATTR_CHANGE | ATTR_SPACEUSED |       \
+     ATTR_RAWDEV | ATTR_ACL)
 
-#define LZFS_BIGGEST_STRIPE_COUNT 4096
-#define LZFS_STD_CHUNK_PART_TYPE 0
-#define LZFS_EXPECTED_BACKUP_DS_COUNT 3
-#define TCP_PROTO_NUMBER 6
+#define LZFS_BIGGEST_STRIPE_COUNT           4096
+#define LZFS_STD_CHUNK_PART_TYPE            0
+#define LZFS_EXPECTED_BACKUP_DS_COUNT       3
+#define TCP_PROTO_NUMBER                    6
 
 fsal_status_t lizardfs2fsal_error(liz_err_t err);
+
 fsal_status_t lzfs_fsal_last_err();
-liz_context_t *lzfs_fsal_create_context(liz_t *instance, struct user_cred *cred);
+
+liz_context_t *lzfs_fsal_create_context(liz_t *instance,
+                                        struct user_cred *cred);
+
 fsal_staticfsinfo_t *lzfs_fsal_staticinfo(struct fsal_module *module_hdl);
+
 void lzfs_fsal_export_ops_init(struct export_ops *ops);
-void lzfs_fsal_handle_ops_init(struct lzfs_fsal_export *lzfs_export, struct fsal_obj_ops *ops);
+
+void lzfs_fsal_handle_ops_init(
+        struct lzfs_fsal_export *lzfs_export, struct fsal_obj_ops *ops);
+
 void lzfs_fsal_handle_ops_pnfs(struct fsal_obj_ops *ops);
+
 void lzfs_fsal_export_ops_pnfs(struct export_ops *ops);
+
 void lzfs_fsal_ops_pnfs(struct fsal_ops *ops);
-struct lzfs_fsal_handle *lzfs_fsal_new_handle(const struct stat *attr,
-                                              struct lzfs_fsal_export *lzfs_export);
+
+struct lzfs_fsal_handle *lzfs_fsal_new_handle(
+        const struct stat *attr, struct lzfs_fsal_export *lzfs_export);
+
 void lzfs_fsal_delete_handle(struct lzfs_fsal_handle *obj);
+
 void lzfs_fsal_ds_handle_ops_init(struct fsal_pnfs_ds_ops *ops);
+
 nfsstat4 lzfs_nfs4_last_err();
-fsal_status_t lzfs_int_getacl(struct lzfs_fsal_export *lzfs_export, uint32_t inode, uint32_t owner,
-                              fsal_acl_t **fsal_acl);
-fsal_status_t lzfs_int_setacl(struct lzfs_fsal_export *lzfs_export, uint32_t inode,
-                              const fsal_acl_t *fsal_acl);
+
+fsal_status_t lzfs_int_getacl(
+                struct lzfs_fsal_export *lzfs_export, uint32_t inode,
+                uint32_t owner, fsal_acl_t **fsal_acl);
+
+fsal_status_t lzfs_int_setacl(
+                struct lzfs_fsal_export *lzfs_export, uint32_t inode,
+                const fsal_acl_t *fsal_acl);
