@@ -22,6 +22,8 @@
 
 #include "lzfs_internal.h"
 
+static struct lzfs_fsal_module gLizardFSM;
+
 fsal_status_t lizardfs2fsal_error(int ec)
 {
 	fsal_status_t status;
@@ -113,7 +115,7 @@ fsal_staticfsinfo_t *lzfs_fsal_staticinfo(struct fsal_module *module_hdl)
 struct lzfs_fsal_handle *lzfs_fsal_new_handle(
         const struct stat *attr, struct lzfs_fsal_export *lzfs_export)
 {
-	struct lzfs_fsal_handle *result = NULL;
+    struct lzfs_fsal_handle *result = NULL;
 
 	result = gsh_calloc(1, sizeof(struct lzfs_fsal_handle));
 
@@ -125,7 +127,7 @@ struct lzfs_fsal_handle *lzfs_fsal_new_handle(
     fsal_obj_handle_init(&result->handle, &lzfs_export->export,
                          posix2fsal_type(attr->st_mode));
 
-    lzfs_fsal_handle_ops_init(lzfs_export, result->handle.obj_ops);
+    result->handle.obj_ops = &gLizardFSM.handle_ops;
 
     result->handle.fsid = posix2fsal_fsid(attr->st_dev);
 	result->handle.fileid = attr->st_ino;

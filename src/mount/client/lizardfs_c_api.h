@@ -275,6 +275,10 @@ typedef struct liz_lock_interrupt_info {
 typedef int (*liz_lock_register_interrupt_t)(struct liz_lock_interrupt_info *info, void *priv);
 
 /*!
+ * \brief Function that registers lock interrupt data.
+ */
+
+/*!
  * \brief Create a context for LizardFS operations
  *  Flavor 1: create default context with current uid/gid/pid
  *  Flavor 2: create context with custom uid/gid/pid

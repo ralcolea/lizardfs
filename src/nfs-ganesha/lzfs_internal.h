@@ -27,6 +27,7 @@
 
 struct lzfs_fsal_module {
 	struct fsal_module fsal;
+    struct fsal_obj_ops handle_ops;
 	fsal_staticfsinfo_t fs_info;
 };
 
@@ -106,6 +107,8 @@ void lzfs_fsal_export_ops_init(struct export_ops *ops);
 
 void lzfs_fsal_handle_ops_init(
         struct lzfs_fsal_export *lzfs_export, struct fsal_obj_ops *ops);
+
+void handle_ops_init(struct fsal_obj_ops *ops);
 
 void lzfs_fsal_handle_ops_pnfs(struct fsal_obj_ops *ops);
 

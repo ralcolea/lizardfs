@@ -109,15 +109,12 @@ static fsal_status_t lzfs_fsal_lookup_path(struct fsal_export *export_hdl,
 	}
 
     if (strstr(real_path, CTX_FULLPATH(op_ctx)) != real_path) {
-		LogFullDebug(COMPONENT_FSAL, "no fullpath match");
-		return fsalstat(ERR_FSAL_SERVERFAULT, 0);
+        return fsalstat(ERR_FSAL_SERVERFAULT, 0);
 	}
     real_path += strlen(CTX_FULLPATH(op_ctx));
 	if (*real_path == '\0') {
 		real_path = root_dir_path;
 	}
-
-	LogFullDebug(COMPONENT_FSAL, "real_path=%s", real_path);
 
 	// special case the root
 	if (strcmp(real_path, "/") == 0) {
@@ -229,7 +226,6 @@ static fsal_status_t lzfs_fsal_create_handle(struct fsal_export *exp_hdl,
 	}
 
 	*pub_handle = &handle->handle;
-
 	return fsalstat(ERR_FSAL_NO_ERROR, 0);
 }
 
@@ -266,111 +262,111 @@ static fsal_status_t lzfs_fsal_get_fs_dynamic_info(struct fsal_export *exp_hdl,
     info->time_delta.tv_sec = 0;
     info->time_delta.tv_nsec = FSAL_DEFAULT_TIME_DELTA_NSEC;
 
-	return fsalstat(ERR_FSAL_NO_ERROR, 0);
+    return fsalstat(ERR_FSAL_NO_ERROR, 0);
 }
 
 /*! \brief Export feature test
  *
  * \see fsal_api.h for more information
  */
-static bool lzfs_fsal_fs_supports(struct fsal_export *exp_hdl,
+/*static bool lzfs_fsal_fs_supports(struct fsal_export *exp_hdl,
                                   fsal_fsinfo_options_t option)
 {
 	struct fsal_staticfsinfo_t *info;
 
 	info = lzfs_fsal_staticinfo(exp_hdl->fsal);
 	return fsal_supports(info, option);
-}
+}*/
 
 /*! \brief Get the greatest file size supported
  *
  * \see fsal_api.h for more information
  */
-static uint64_t lzfs_fsal_fs_maxfilesize(struct fsal_export *exp_hdl)
+/*static uint64_t lzfs_fsal_fs_maxfilesize(struct fsal_export *exp_hdl)
 {
 	struct fsal_staticfsinfo_t *info;
 
 	info = lzfs_fsal_staticinfo(exp_hdl->fsal);
 	return fsal_maxfilesize(info);
-}
+}*/
 
 /*! \brief Get the greatest read size supported
  *
  * \see fsal_api.h for more information
  */
-static uint32_t lzfs_fsal_fs_maxread(struct fsal_export *exp_hdl)
+/*static uint32_t lzfs_fsal_fs_maxread(struct fsal_export *exp_hdl)
 {
 	struct fsal_staticfsinfo_t *info;
 
 	info = lzfs_fsal_staticinfo(exp_hdl->fsal);
 	return fsal_maxread(info);
-}
+}*/
 
 /*! \brief Get the greatest write size supported
  *
  * \see fsal_api.h for more information
  */
-static uint32_t lzfs_fsal_fs_maxwrite(struct fsal_export *exp_hdl)
+/*static uint32_t lzfs_fsal_fs_maxwrite(struct fsal_export *exp_hdl)
 {
 	struct fsal_staticfsinfo_t *info;
 
 	info = lzfs_fsal_staticinfo(exp_hdl->fsal);
 	return fsal_maxwrite(info);
-}
+}*/
 
 /*! \brief Get the greatest link count supported
  *
  * \see fsal_api.h for more information
  */
-static uint32_t lzfs_fsal_fs_maxlink(struct fsal_export *exp_hdl)
+/*static uint32_t lzfs_fsal_fs_maxlink(struct fsal_export *exp_hdl)
 {
 	struct fsal_staticfsinfo_t *info;
 
 	info = lzfs_fsal_staticinfo(exp_hdl->fsal);
 	return fsal_maxlink(info);
-}
+}*/
 
 /*! \brief Get the greatest name length supported
  *
  * \see fsal_api.h for more information
  */
-static uint32_t lzfs_fsal_fs_maxnamelen(struct fsal_export *exp_hdl)
+/*static uint32_t lzfs_fsal_fs_maxnamelen(struct fsal_export *exp_hdl)
 {
 	struct fsal_staticfsinfo_t *info;
 
 	info = lzfs_fsal_staticinfo(exp_hdl->fsal);
 	return fsal_maxnamelen(info);
-}
+}*/
 
 /*! \brief Get the greatest path length supported
  *
  * \see fsal_api.h for more information
  */
-static uint32_t lzfs_fsal_fs_maxpathlen(struct fsal_export *exp_hdl)
+/*static uint32_t lzfs_fsal_fs_maxpathlen(struct fsal_export *exp_hdl)
 {
 	struct fsal_staticfsinfo_t *info;
 
 	info = lzfs_fsal_staticinfo(exp_hdl->fsal);
 	return fsal_maxpathlen(info);
-}
+}*/
 
 /*! \brief Get supported ACL types
  *
  * \see fsal_api.h for more information
  */
-static fsal_aclsupp_t lzfs_fsal_fs_acl_support(struct fsal_export *exp_hdl)
+/*static fsal_aclsupp_t lzfs_fsal_fs_acl_support(struct fsal_export *exp_hdl)
 {
 	struct fsal_staticfsinfo_t *info;
 
 	info = lzfs_fsal_staticinfo(exp_hdl->fsal);
 	return fsal_acl_support(info);
-}
+}*/
 
 /*! \brief Get supported attributes
  *
  * \see fsal_api.h for more information
  */
-static attrmask_t lzfs_fsal_fs_supported_attrs(struct fsal_export *exp_hdl)
+/*static attrmask_t lzfs_fsal_fs_supported_attrs(struct fsal_export *exp_hdl)
 {
 	struct fsal_staticfsinfo_t *info;
 	attrmask_t supported_mask;
@@ -380,19 +376,19 @@ static attrmask_t lzfs_fsal_fs_supported_attrs(struct fsal_export *exp_hdl)
 	supported_mask = fsal_supported_attrs(info);
 
 	return supported_mask;
-}
+}*/
 
 /*! \brief Get umask applied to created files
  *
  * \see fsal_api.h for more information
  */
-static uint32_t lzfs_fsal_fs_umask(struct fsal_export *exp_hdl)
+/*static uint32_t lzfs_fsal_fs_umask(struct fsal_export *exp_hdl)
 {
     struct fsal_staticfsinfo_t *info;
 
     info = lzfs_fsal_staticinfo(exp_hdl->fsal);
     return fsal_umask(info);
-}
+}*/
 
 /*! \brief Allocate a state_t structure
  *
@@ -427,7 +423,7 @@ void lzfs_fsal_export_ops_init(struct export_ops *ops)
     ops->wire_to_host = lzfs_fsal_wire_to_host;
     ops->create_handle = lzfs_fsal_create_handle;
     ops->get_fs_dynamic_info = lzfs_fsal_get_fs_dynamic_info;
-    ops->fs_supports = lzfs_fsal_fs_supports;
+    /*ops->fs_supports = lzfs_fsal_fs_supports;
     ops->fs_maxfilesize = lzfs_fsal_fs_maxfilesize;
     ops->fs_maxread = lzfs_fsal_fs_maxread;
     ops->fs_maxwrite = lzfs_fsal_fs_maxwrite;
@@ -436,9 +432,9 @@ void lzfs_fsal_export_ops_init(struct export_ops *ops)
     ops->fs_maxpathlen = lzfs_fsal_fs_maxpathlen;
     ops->fs_acl_support = lzfs_fsal_fs_acl_support;
     ops->fs_supported_attrs = lzfs_fsal_fs_supported_attrs;
-    ops->fs_umask = lzfs_fsal_fs_umask;
+    ops->fs_umask = lzfs_fsal_fs_umask;*/
     ops->alloc_state = lzfs_fsal_alloc_state;
     ops->free_state = lzfs_fsal_free_state;
 
-    lzfs_fsal_export_ops_pnfs(ops);
+    //lzfs_fsal_export_ops_pnfs(ops);
 }

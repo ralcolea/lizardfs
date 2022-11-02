@@ -73,6 +73,8 @@
 #include "protocol/MFSCommunication.h"
 #include "protocol/matocl.h"
 
+#include "client/crash-log.h"
+
 #ifdef __APPLE__
 #include "mount/osx_acl_converter.h"
 #endif
@@ -113,7 +115,7 @@ struct ReaddirSession {
 using ReaddirSessions = std::map<std::uint64_t, ReaddirSession>;
 
 std::mutex gReaddirMutex;
-ReaddirSessions gReaddirSessions;
+inline ReaddirSessions gReaddirSessions;
 
 static void update_credentials(Context::IdType index, const GroupCache::Groups &groups);
 static void registerGroupsInMaster(Context &ctx);
@@ -128,32 +130,56 @@ static void registerGroupsInMaster(Context &ctx);
 		} while (0);
 
 void updateGroups(Context &ctx) {
+    crashLog("lizard_client updateGroups before ctx.uid: %d ctx.gid: %d Line: %d",
+             ctx.uid, ctx.gid, __LINE__);
 	if (ctx.gids.empty()) {
+        crashLog("lizard_client ctx.gids.empty() Line: %d", __LINE__);
 		return;
 	}
 
-	if (ctx.gids.size() == 1) {
+    crashLog("lizard_client updateGroups ctx.gids.size(): %d",
+             ctx.gids.size());
+    if (ctx.gids.size() == 1) {
 		ctx.gid = ctx.gids[0];
+        crashLog("lizard_client ctx.gids.size() == 1 ctx.gid: %d Line: %d",
+                 ctx.gid, __LINE__);
 		return;
 	}
 
 	static_assert(sizeof(Context::IdType) >= sizeof(uint32_t), "IdType too small");
 
 	auto result = gGroupCache.find(ctx.gids);
+    crashLog("lizard_client result->index: %d - result->found: %d Line: %d",
+             result.index, result.found, __LINE__);
 	Context::IdType gid = 0;
 	if (result.found == false) {
 		try {
+            crashLog("lizard_client result.found == false Line: %d", __LINE__);
 			uint32_t index = gGroupCache.put(ctx.gids);
+            crashLog("lizard_client index = %d Line: %d",
+                     index, __LINE__);
 			update_credentials(index, ctx.gids);
 			gid = user_groups::encodeGroupCacheId(index);
+            crashLog("lizard_client updated gid: %d Line: %d",
+                     gid, __LINE__);
 		} catch (RequestException &e) {
 			lzfs_pretty_syslog(LOG_ERR, "Cannot update groups: %d", e.system_error_code);
 		}
 	} else {
+        crashLog("lizard_client result.found == true Line: %d", __LINE__);
 		gid = user_groups::encodeGroupCacheId(result.index);
+        // testing the overflow:
+        uint32_t v = result.index;
+        uint64_t b = (uint32_t)1 << (uint32_t)31;
+        uint64_t res = v | b;
+        crashLog("overflow: v: %d b: %llu result: %llu Line: %d",
+                 v, b, res, __LINE__);
+        crashLog("lizard_client updated gid: %d Line: %d", gid, __LINE__);
 	}
 
-	ctx.gid = gid;
+    //ctx.gid = gid;
+    crashLog("lizard_client updateGroups ctx.uid: %d ctx.gid: %d exit Line: %d",
+             ctx.uid, ctx.gid, __LINE__);
 }
 
 static void registerGroupsInMaster(Context &ctx) {
@@ -223,7 +249,6 @@ static std::atomic<bool> gDirectIo(false);
 static uint32_t lock_request_counter = 0;
 static std::mutex lock_request_mutex;
 
-
 static std::unique_ptr<AclCache> acl_cache;
 
 void update_readdir_session(uint64_t sessId, uint64_t entryIno) {
@@ -240,7 +265,7 @@ static void updateNextReaddirEntryIndexIfMasterRestarted(ReaddirSession& readdir
 		Context &ctx, Inode parentInode, uint64_t requestSize) {
 	if (!readdirSession.restarted) {
 		return;
-	}
+    }
 	std::vector<DirectoryEntry> dirEntries;
 	uint8_t status = 0;
 	nextEntryIndex = 0;
@@ -1593,7 +1618,8 @@ std::vector<DirEntry> readdir(Context &ctx, uint64_t fh, Inode ino, off_t off, s
 	auto it = gDirEntryCache.find(ctx, ino, entry_index);
 
 	result.reserve(max_entries);
-	for(; it != gDirEntryCache.index_end() && max_entries > 0; ++it) {
+
+    for(; it != gDirEntryCache.index_end() && max_entries > 0; ++it) {
 		if (!gDirEntryCache.isValid(it) || it->index != entry_index ||
 				it->parent_inode != ino || it->uid != ctx.uid || it->gid != ctx.gid) {
 			break;
@@ -1645,7 +1671,8 @@ std::vector<DirEntry> readdir(Context &ctx, uint64_t fh, Inode ino, off_t off, s
 	}
 	do {
 		updateNextReaddirEntryIndexIfMasterRestarted(*readdirSession, entry_index, ctx, ino, request_size);
-		status = fs_getdir(ino, ctx.uid, ctx.gid, entry_index, request_size, dir_entries);
+        status = fs_getdir(ino, ctx.uid, ctx.gid, entry_index, request_size, dir_entries);
+
 		if (status == LIZARDFS_ERROR_GROUPNOTREGISTERED) {
 			registerGroupsInMaster(ctx);
 			updateNextReaddirEntryIndexIfMasterRestarted(*readdirSession, entry_index, ctx, ino, request_size);
@@ -1664,7 +1691,8 @@ std::vector<DirEntry> readdir(Context &ctx, uint64_t fh, Inode ino, off_t off, s
 
 	// dir_entries.front().index must be equal to entry_index
 	gDirEntryCache.insertSequence(ctx, ino, dir_entries, data_acquire_time);
-	if (dir_entries.size() < request_size) {
+
+    if (dir_entries.size() < request_size) {
 		// insert 'no more entries' marker
 		auto marker_index = entry_index;
 		if (!dir_entries.empty()) {
@@ -1712,7 +1740,6 @@ std::vector<DirEntry> readdir(Context &ctx, uint64_t fh, Inode ino, off_t off, s
 				entry_index,
 				entry_index);
 	}
-
 	return result;
 }
 

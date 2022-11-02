@@ -194,7 +194,7 @@ static fsal_status_t lzfs_fsal_create_export(struct fsal_module *fsal_hdl,
                                             &lzfs_export->lzfs_params);
 
 	if (lzfs_export->lzfs_instance == NULL) {
-		LogCrit(COMPONENT_FSAL, "Unable to mount LizardFS cluster for %s.",
+        LogCrit(COMPONENT_FSAL, "Unable to mount LizardFS cluster for %s.",
                 CTX_FULLPATH(op_ctx));
 		status = fsalstat(ERR_FSAL_SERVERFAULT, 0);
 		goto error;
@@ -217,8 +217,9 @@ static fsal_status_t lzfs_fsal_create_export(struct fsal_module *fsal_hdl,
 		lzfs_export->fileinfo_cache = liz_create_fileinfo_cache(
                     lzfs_export->fileinfo_cache_max_size,
                     lzfs_export->fileinfo_cache_timeout * 1000);
+
 		if (lzfs_export->fileinfo_cache == NULL) {
-			LogCrit(COMPONENT_FSAL, "Unable to create fileinfo cache for %s.",
+            LogCrit(COMPONENT_FSAL, "Unable to create fileinfo cache for %s.",
                     CTX_FULLPATH(op_ctx));
 			status = fsalstat(ERR_FSAL_SERVERFAULT, 0);
 			goto error;
@@ -226,7 +227,9 @@ static fsal_status_t lzfs_fsal_create_export(struct fsal_module *fsal_hdl,
 
         status = fsal_hdl->m_ops.create_fsal_pnfs_ds(fsal_hdl, parse_node,
                                                      &pds);
+
 		if (status.major != ERR_FSAL_NO_ERROR) {
+            LogFullDebug(COMPONENT_FSAL, "status.major != ERR_FSAL_NO_ERROR Line: %d", __LINE__);
 			goto error;
 		}
 
@@ -249,6 +252,7 @@ static fsal_status_t lzfs_fsal_create_export(struct fsal_module *fsal_hdl,
 	lzfs_export->pnfs_mds_enabled =
         lzfs_export->export.exp_ops.fs_supports(&lzfs_export->export,
                                                 fso_pnfs_mds_supported);
+
 	if (lzfs_export->pnfs_mds_enabled) {
         LogDebug(COMPONENT_PNFS, "pnfs mds was enabled for [%s]",
                  CTX_FULLPATH(op_ctx));
@@ -305,7 +309,7 @@ static fsal_status_t lzfs_fsal_init_config(struct fsal_module *module_in,
 
     lzfs_module = container_of(module_in, struct lzfs_fsal_module, fsal);
 
-	LogDebug(COMPONENT_FSAL, "LizardFS module setup.");
+    LogDebug(COMPONENT_FSAL, "LizardFS module setup.");
 
 	lzfs_module->fs_info = default_lizardfs_info;
     (void)load_config_from_parse(config_struct, &lzfs_fsal_param_block,
@@ -328,26 +332,27 @@ MODULE_INIT void init(void)
 {
 	struct fsal_module *lzfs_module = &gLizardFSM.fsal;
 
-	LogDebug(COMPONENT_FSAL, "LizardFS module registering.");
+    LogDebug(COMPONENT_FSAL, "LizardFS module registering.");
 
 	memset(lzfs_module, 0, sizeof(*lzfs_module));
     if (register_fsal(lzfs_module, gModuleName, FSAL_MAJOR_VERSION,
                       FSAL_MINOR_VERSION, FSAL_ID_LIZARDFS) != 0) {
-		LogCrit(COMPONENT_FSAL, "LizardFS module failed to register.");
+        LogCrit(COMPONENT_FSAL, "LizardFS module failed to register.");
 	}
 
 	lzfs_module->m_ops.fsal_pnfs_ds_ops = lzfs_fsal_ds_handle_ops_init;
 	lzfs_module->m_ops.create_export = lzfs_fsal_create_export;
 	lzfs_module->m_ops.init_config = lzfs_fsal_init_config;
 
+    handle_ops_init(&gLizardFSM.handle_ops);
     lzfs_fsal_ops_pnfs(&lzfs_module->m_ops);
 }
 
 MODULE_FINI void finish(void)
 {
-	LogDebug(COMPONENT_FSAL, "LizardFS module finishing.");
+    LogDebug(COMPONENT_FSAL, "LizardFS module finishing.");
 
-	if (unregister_fsal(&gLizardFSM.fsal) != 0) {
+    if (unregister_fsal(&gLizardFSM.fsal) != 0) {
         LogCrit(COMPONENT_FSAL, "Unable to unload LizardFS FSAL. "
                 "Dying with extreme prejudice.");
 		abort();
