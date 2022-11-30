@@ -1,3 +1,7 @@
+#
+# To run this test you need to install ganesha and liblizardfs-client.so
+#
+#
 timeout_set 60 seconds
 CHUNKSERVERS=1 \
 	USE_RAMDISK=YES \
@@ -18,9 +22,12 @@ GROUP_ID=$(id -g lizardfstest)
 GANESHA_BS="$((1<<20))"
 
 PID_FILE=${info[mount0]}/var/run/ganesha/ganesha.pid
-if [ ! -f ${PID_FILE} ]; then  
-	mkdir -p ${info[mount0]}/var/run/ganesha
-	touch ${PID_FILE}
+if [ ! -f ${PID_FILE} ]; then
+  echo "File doesn't exists, creating...";
+	mkdir -p ${info[mount0]}/var/run/ganesha;
+	touch ${PID_FILE};
+else
+	echo "File exists";
 fi
 
 cp -a /usr/lib/ganesha/libfsalcrashfs* ${info[mount0]}/lib/ganesha/
@@ -72,6 +79,12 @@ CrashFS {
 }
 EOF
 
+test_error_cleanup() {
+  cd ${TEMP_DIR}
+  sudo umount -l ${TEMP_DIR}/mnt/ganesha
+  sudo kill -9 "$(pgrep '^ganesha.nfsd' | awk '{print $1}')"
+}
+
 sudo ${info[mount0]}/bin/ganesha.nfsd -f ${info[mount0]}/etc/ganesha/ganesha.conf
 sudo mount -vvvv localhost:/data $TEMP_DIR/mnt/ganesha
 
@@ -102,6 +115,4 @@ assert_equals "$((${MAX_FILES} + 1))" "$(ls ${TEMP_DIR}/mnt/ganesha/ | wc -l)"
 ### Check open2 / cat|dd / syscall
 assert_equals "Ganesha_Test_Ok" $(cat $(find -name file))
 
-cd ${TEMP_DIR}
-sudo umount -l ${TEMP_DIR}/mnt/ganesha
-sudo kill -9 $(pgrep '^ganesha.nfsd$')
+test_error_cleanup || true
