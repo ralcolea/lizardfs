@@ -28,6 +28,7 @@
 #include "mount/client/iovec_traits.h"
 
 #include "client.h"
+#include "crash-log.h"
 
 using namespace lizardfs;
 
@@ -713,11 +714,13 @@ int liz_statfs(liz_t *instance, liz_stat_t *buf) {
 }
 
 int liz_setxattr(liz_t *instance, liz_context_t *ctx, liz_inode_t ino, const char *name,
-	         const uint8_t *value, size_t size, int flags) {
+             const uint8_t *value, size_t size,
+                 enum liz_setxattr_mode mode/*int flags*/) {
 	Client &client = *(Client *)instance;
 	Client::Context &context = *(Client::Context *)ctx;
 	std::error_code ec;
-	client.setxattr(context, ino, name, std::vector<uint8_t>(value, value + size), flags, ec);
+    //client.setxattr(context, ino, name, std::vector<uint8_t>(value, value + size), flags, ec);
+    client.setxattr(context, ino, name, std::vector<uint8_t>(value, value + size), mode, ec);
 	gLastErrorCode = ec.value();
 	return ec ? -1 : 0;
 }
@@ -749,7 +752,7 @@ int liz_listxattr(liz_t *instance, liz_context_t *ctx, liz_inode_t ino, size_t s
 	if (ec) {
 		return -1;
 	}
-	std::memcpy(buf, ret.data(), std::min(size, ret.size()));
+    std::memcpy(buf, ret.data(), std::min(size, ret.size()));
 	if (out_size) {
 		*out_size = ret.size();
 	}
@@ -848,10 +851,14 @@ int liz_getacl(liz_t *instance, liz_context_t *ctx, liz_inode_t ino, liz_acl_t *
 	Client::Context &context = *(Client::Context *)ctx;
 	std::error_code ec;
 	*acl = nullptr;
+    crashLog("lizardfs_c_api.cc liz_getacl acl = nullptr Line: %d", __LINE__);
 	try {
+        crashLog("lizardfs_c_api.cc richacl = client.getacl() Line: %d", __LINE__);
 		RichACL richacl = client.getacl(context, ino, ec);
+        crashLog("lizardfs_c_api.cc gLastErrorCode = ec.value() Line: %d", __LINE__);
 		gLastErrorCode = ec.value();
 		if (ec) {
+            crashLog("gLastErrorCode: %s", ec.message().c_str());
 			return -1;
 		}
 		*acl = (liz_acl_t *)new RichACL(std::move(richacl));

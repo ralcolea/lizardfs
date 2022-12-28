@@ -130,56 +130,41 @@ static void registerGroupsInMaster(Context &ctx);
 		} while (0);
 
 void updateGroups(Context &ctx) {
-    crashLog("lizard_client updateGroups before ctx.uid: %d ctx.gid: %d Line: %d",
-             ctx.uid, ctx.gid, __LINE__);
 	if (ctx.gids.empty()) {
-        crashLog("lizard_client ctx.gids.empty() Line: %d", __LINE__);
 		return;
 	}
 
-    crashLog("lizard_client updateGroups ctx.gids.size(): %d",
-             ctx.gids.size());
     if (ctx.gids.size() == 1) {
 		ctx.gid = ctx.gids[0];
-        crashLog("lizard_client ctx.gids.size() == 1 ctx.gid: %d Line: %d",
-                 ctx.gid, __LINE__);
 		return;
 	}
 
 	static_assert(sizeof(Context::IdType) >= sizeof(uint32_t), "IdType too small");
 
 	auto result = gGroupCache.find(ctx.gids);
-    crashLog("lizard_client result->index: %d - result->found: %d Line: %d",
-             result.index, result.found, __LINE__);
 	Context::IdType gid = 0;
 	if (result.found == false) {
 		try {
-            crashLog("lizard_client result.found == false Line: %d", __LINE__);
 			uint32_t index = gGroupCache.put(ctx.gids);
-            crashLog("lizard_client index = %d Line: %d",
-                     index, __LINE__);
 			update_credentials(index, ctx.gids);
 			gid = user_groups::encodeGroupCacheId(index);
-            crashLog("lizard_client updated gid: %d Line: %d",
-                     gid, __LINE__);
 		} catch (RequestException &e) {
 			lzfs_pretty_syslog(LOG_ERR, "Cannot update groups: %d", e.system_error_code);
 		}
 	} else {
-        crashLog("lizard_client result.found == true Line: %d", __LINE__);
-		gid = user_groups::encodeGroupCacheId(result.index);
+        //gid = user_groups::encodeGroupCacheId(result.index);
         // testing the overflow:
-        uint32_t v = result.index;
+        /*uint32_t v = result.index;
         uint64_t b = (uint32_t)1 << (uint32_t)31;
         uint64_t res = v | b;
         crashLog("overflow: v: %d b: %llu result: %llu Line: %d",
                  v, b, res, __LINE__);
-        crashLog("lizard_client updated gid: %d Line: %d", gid, __LINE__);
+        crashLog("lizard_client updated gid: %d Line: %d", gid, __LINE__);*/
 	}
 
     //ctx.gid = gid;
-    crashLog("lizard_client updateGroups ctx.uid: %d ctx.gid: %d exit Line: %d",
-             ctx.uid, ctx.gid, __LINE__);
+    /*crashLog("lizard_client updateGroups ctx.uid: %d ctx.gid: %d exit Line: %d",
+             ctx.uid, ctx.gid, __LINE__);*/
 }
 
 static void registerGroupsInMaster(Context &ctx) {
@@ -2591,12 +2576,34 @@ public:
 	uint8_t getxattr(Context& ctx, Inode ino, const char *,
 			uint32_t, int, uint32_t& valueLength, std::vector<uint8_t>& value) override {
 		try {
+            crashLog("lizard_client.cc RichAclXattrHandler::getxattr Line: %d", __LINE__);
 			AclCacheEntry cache_entry = acl_cache->get(clock_.now(), ino, ctx.uid, ctx.gid);
+            crashLog("lizard_client.cc acl_cache->get(ino: %d, ctx.uid: %d, ctx.gid: %d) Line: %d",
+                     ino, ctx.uid, ctx.gid, __LINE__);
 			if (cache_entry) {
+                crashLog("lizard_client.cc if (cache_entry) Line: %d", __LINE__);
 				value = richAclConverter::objectToRichACLXattr(cache_entry->acl);
 				valueLength = value.size();
+                crashLog("lizard_client.cc valueLength = %d Line: %d",
+                         value.size(), __LINE__);
+                string s = "";
+                char *x = new char[valueLength + 1];
+                crashLog("lizard_client.cc -----ACL values----- Line: %d", __LINE__);
+                for (size_t i = 0; i < value.size(); i++) {
+                    s += value[i];
+                    x[i] = value[i];
+                    crashLog("ACL bytes: unsigned int: %u", value[i]);
+                }
+                crashLog("lizard_client.cc -----ACL values----- Line: %d", __LINE__);
+                x[valueLength] = '\0';
+                crashLog("lizard_client.cc value = %s Line: %d", s.c_str(), __LINE__);
+                crashLog("lizard_client.cc x = %s x.size(): %d Line: %d",
+                         x, strlen(x), __LINE__);
+
+                delete [] x;
 				return LIZARDFS_STATUS_OK;
 			} else {
+                crashLog("lizard_client.cc cache_entry NULL Line: %d", __LINE__);
 				return LIZARDFS_ERROR_ENOATTR;
 			}
 		} catch (AclAcquisitionException& e) {
@@ -2842,7 +2849,7 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 	const uint8_t *buff;
 	uint32_t leng;
 
-
+    crashLog("lizard_client.cc getxattr %s Line: %d", name, __LINE__);
 	stats_inc(OP_GETXATTR);
 	if (debug_mode) {
 		oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 ") ...",
@@ -2851,6 +2858,7 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 				(uint64_t)size);
 	}
 	if (IS_SPECIAL_INODE(ino)) {
+        crashLog("lizard_client.cc IS_SPECIAL_INODE(ino) Line: %d", __LINE__);
 		oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): %s",
 				(unsigned long int)ino,
 				name,
@@ -2859,7 +2867,9 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 		throw RequestException(LIZARDFS_ERROR_ENODATA);
 	}
 	nleng = strlen(name);
+    crashLog("lizard_client.cc nleng = %d Line: %d", nleng, __LINE__);
 	if (nleng>MFS_XATTR_NAME_MAX) {
+        crashLog("lizard_client.cc nleng > MFS_XATTR_NAME_MAX Line: %d", __LINE__);
 #if defined(__APPLE__)
 		// Mac OS X returns EPERM here
 		oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): %s",
@@ -2874,10 +2884,12 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 				name,
 				(uint64_t)size,
 				lizardfs_error_string(LIZARDFS_ERROR_ERANGE));
+        crashLog("lizard_client.cc throw exception LIZARDFS_ERROR_ERANGE Line: %d", __LINE__);
 		throw RequestException(LIZARDFS_ERROR_ERANGE);
 #endif
 	}
 	if (nleng==0) {
+        crashLog("lizard_client.cc nleng==0 Line: %d", __LINE__);
 		oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): %s",
 				(unsigned long int)ino,
 				name,
@@ -2886,11 +2898,13 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 		throw RequestException(LIZARDFS_ERROR_EINVAL);
 	}
 	if (strcmp(name,"security.capability")==0) {
+        crashLog("lizard_client.cc name == security.capability Line: %d", __LINE__);
 		oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): %s",
 				(unsigned long int)ino,
 				name,
 				(uint64_t)size,
 				lizardfs_error_string(LIZARDFS_ERROR_ENOTSUP));
+        crashLog("lizard_client.cc throw exception LIZARDFS_ERROR_ENOTSUP Line: %d", __LINE__);
 		throw RequestException(LIZARDFS_ERROR_ENOTSUP);
 	}
 	if (size==0) {
@@ -2900,8 +2914,11 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 	}
 	(void)position;
 	status = choose_xattr_handler(name)->getxattr(ctx, ino, name, nleng, mode, leng, buffer);
+    crashLog("lizard_client.cc choose_xattr_handler(name) status = %d Line: %d",
+             status, __LINE__);
 	buff = buffer.data();
 	if (status != LIZARDFS_STATUS_OK) {
+        crashLog("lizard_client.cc status != LIZARDFS_STATUS_OK Line: %d", __LINE__);
 		oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): %s",
 				(unsigned long int)ino,
 				name,
@@ -2910,6 +2927,7 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 		throw RequestException(status);
 	}
 	if (size==0) {
+        crashLog("lizard_client.cc size == 0 Line: %d", __LINE__);
 		oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): OK (%" PRIu32 ")",
 				(unsigned long int)ino,
 				name,
@@ -2918,6 +2936,7 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 		return XattrReply{leng, {}};
 	} else {
 		if (leng>size) {
+            crashLog("lizard_client.cc leng > size Line: %d", __LINE__);
 			oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): %s",
 					(unsigned long int)ino,
 					name,
@@ -2925,6 +2944,7 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 					lizardfs_error_string(LIZARDFS_ERROR_ERANGE));
 			throw RequestException(LIZARDFS_ERROR_ERANGE);
 		} else {
+            crashLog("lizard_client.cc getxattr OK Line: %d", __LINE__);
 			oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): OK (%" PRIu32 ")",
 					(unsigned long int)ino,
 					name,
