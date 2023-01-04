@@ -170,11 +170,7 @@ void Client::updateGroups(Context &ctx) {
 }
 
 void Client::updateGroups(Context &ctx, std::error_code &ec) {
-    crashLog("client.cc updateGroups before context.uid: %d context.gid: %d Line: %d",
-             ctx.uid, ctx.gid, __LINE__);
 	auto ret = lizardfs_update_groups_(ctx);
-    crashLog("client.cc updateGroups after context.uid: %d context.gid: %d Line: %d",
-             ctx.uid, ctx.gid, __LINE__);
 	ec = make_error_code(ret);
 }
 
@@ -249,17 +245,7 @@ Client::ReadDirReply Client::readdir(Context &ctx, FileInfo* fileinfo, off_t off
 
 Client::ReadDirReply Client::readdir(Context &ctx, FileInfo* fileinfo, off_t offset,
 		size_t max_entries, std::error_code &ec) {
-
-    crashLog("before lizardfs_readdir_ client.cc %d", __LINE__);
-
-    int value = (ctx.isValid()) ?   0 : -1;
-    crashLog("ctx: %d client.cc %d", value, __LINE__);
-
-    crashLog("fileinfo: %p client.cc %d", (void*)fileinfo, __LINE__);
-    crashLog("opendirSessionID: %lu client.cc %d", fileinfo->opendirSessionID, __LINE__);
-
 	auto ret = lizardfs_readdir_(ctx, fileinfo->opendirSessionID, fileinfo->inode, offset, max_entries);
-    crashLog("lizardfs_readdir_ status: %d, client.cc", ret.first);
 	ec = make_error_code(ret.first);
 	return ret.second;
 }
@@ -328,19 +314,11 @@ Client::FileInfo *Client::opendir(Context &ctx, Inode inode) {
 
 Client::FileInfo *Client::opendir(Context &ctx, Inode inode, std::error_code &ec) {
 	int ret = lizardfs_opendir_(ctx, inode);
-
 	ec = make_error_code(ret);
 	if (ec) {
 		return nullptr;
 	}
 	FileInfo *fileinfo = new FileInfo(inode, nextOpendirSessionID_++);
-    crashLog("nextOpendirSessionID: %lu pointer: %p",
-             nextOpendirSessionID_.load(), (void *)fileinfo);
-
-    if (fileinfo == nullptr) {
-        crashLog("fileinfo null");
-    }
-
     LizardClient::update_readdir_session(fileinfo->opendirSessionID, 0);
 	std::lock_guard<std::mutex> guard(mutex_);
 	fileinfos_.push_front(*fileinfo);
@@ -667,6 +645,8 @@ Client::XattrBuffer Client::getxattr(Context &ctx, Inode ino, const std::string 
 Client::XattrBuffer Client::getxattr(Context &ctx, Inode ino, const std::string &name,
 	                                  std::error_code &ec) {
 	LizardClient::XattrReply reply;
+    crashLog("client.cc getxattr %s with MAXSize %d Line: %d",
+             name.c_str(), kMaxXattrRequestSize, __LINE__);
 	int ret = lizardfs_getxattr_(ctx, ino, name.c_str(), kMaxXattrRequestSize, reply);
 	ec = make_error_code(ret);
 	return reply.valueBuffer;
@@ -729,7 +709,8 @@ RichACL Client::getacl(Context &ctx, Inode ino) {
 
 RichACL Client::getacl(Context &ctx, Inode ino, std::error_code &ec) {
 	try {
-		auto buffer = getxattr(ctx, ino, kRichAclXattrName, ec);
+        crashLog("client.cc getacl %s Line: %d", kRichAclXattrName, __LINE__);
+        auto buffer = getxattr(ctx, ino, kRichAclXattrName, ec);
 		if (ec) {
 			return RichACL();
 		}

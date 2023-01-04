@@ -673,8 +673,9 @@ int liz_statfs(liz_t *instance, liz_stat_t *buf);
  * \param mode one of enum liz_setxattr_mode values
  * \return 0 on success, -1 if failed, sets last error code (check with liz_last_err())
  */
-int liz_setxattr(liz_t *instance, liz_context_t *ctx, liz_inode_t ino, const char *name,
-	         const uint8_t *value, size_t size, enum liz_setxattr_mode mode);
+int liz_setxattr(liz_t *instance, liz_context_t *ctx, liz_inode_t ino,
+                 const char *name, const uint8_t *value, size_t size,
+                 enum liz_setxattr_mode mode);
 
 /*! \brief Get extended attribute of a file
  * \param instance instance returned from liz_init
