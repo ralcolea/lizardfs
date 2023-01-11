@@ -718,6 +718,14 @@ int liz_removexattr(liz_t *instance, liz_context_t *ctx, liz_inode_t ino, const 
 liz_acl_t *liz_create_acl();
 
 /*!
+ * \brief Create acl
+ * \param mode  mode used to create the acl and set POSIX permission flags
+ * \return acl entry
+ * \post free memory with liz_destroy_acl call
+ */
+liz_acl_t *liz_create_acl_from_mode(unsigned int mode);
+
+/*!
  * \brief Destroy acl
  * \param acl access control list
  */
@@ -766,7 +774,7 @@ size_t liz_get_acl_size(const liz_acl_t *acl);
  * \return 0 on success, -1 if failed, sets last error code (check with liz_last_err())
  */
 int liz_setacl(liz_t *instance, liz_context_t *ctx, liz_inode_t ino,
-	       const liz_acl_t *acl);
+               liz_acl_t *acl);
 
 /*!
  * \brief Get acl from a file

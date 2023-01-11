@@ -2392,7 +2392,6 @@ public:
 
 	uint8_t getxattr(Context& ctx, Inode ino, const char *name,
 		uint32_t nleng, int mode, uint32_t& valueLength, std::vector<uint8_t>& value) override {
-        crashLog("lizard_client.cc PlainXattrHandler::getxattr Line: %d", __LINE__);
 		const uint8_t *buff;
 		uint8_t status;
 		RETRY_ON_ERROR_WITH_UPDATED_CREDENTIALS(status, ctx,
@@ -2464,7 +2463,6 @@ public:
 	uint8_t getxattr(Context& ctx, Inode ino, const char *,
 			uint32_t, int /*mode*/, uint32_t& valueLength, std::vector<uint8_t>& value) override {
 		try {
-            crashLog("lizard_client.cc PosixAclXattrHandler::getxattr Line: %d", __LINE__);
 			AclCacheEntry cacheEntry = acl_cache->get(clock_.now(), ino, ctx.uid, ctx.gid);
 			if (cacheEntry) {
 				std::pair<bool, AccessControlList> posix_acl;
@@ -2524,17 +2522,12 @@ public:
 	uint8_t getxattr(Context& ctx, Inode ino, const char *,
 			uint32_t, int, uint32_t& valueLength, std::vector<uint8_t>& value) override {
 		try {
-            crashLog("lizard_client.cc NFSAclXattrHandler::getxattr Line: %d", __LINE__);
 			AclCacheEntry cache_entry = acl_cache->get(clock_.now(), ino, ctx.uid, ctx.gid);
-            crashLog("lizard_client.cc acl_cache->get(ino: %d, ctx.uid: %d, ctx.gid: %d) Line: %d",
-                     ino, ctx.uid, ctx.gid, __LINE__);
 			if (cache_entry) {
 				value = richAclConverter::objectToNFSXattr(cache_entry->acl, cache_entry->owner_id);
 				valueLength = value.size();
 			} else {
 				// NOTICE(sarna): This call will most likely use attr cache anyway
-                crashLog("lizard_client.cc creating RichACL from POSIX mode Line: %d",
-                         value.size(), __LINE__);
 				AttrReply attr_reply = LizardClient::getattr(ctx, ino);
 				RichACL generated_acl = RichACL::createFromMode(
 					attr_reply.attr.st_mode & 0777,
@@ -2583,16 +2576,12 @@ public:
 	uint8_t getxattr(Context& ctx, Inode ino, const char *,
 			uint32_t, int, uint32_t& valueLength, std::vector<uint8_t>& value) override {
 		try {
-            crashLog("lizard_client.cc RichAclXattrHandler::getxattr Line: %d", __LINE__);
 			AclCacheEntry cache_entry = acl_cache->get(clock_.now(), ino, ctx.uid, ctx.gid);
-            crashLog("lizard_client.cc acl_cache->get(ino: %d, ctx.uid: %d, ctx.gid: %d) Line: %d",
-                     ino, ctx.uid, ctx.gid, __LINE__);
 			if (cache_entry) {
 				value = richAclConverter::objectToRichACLXattr(cache_entry->acl);
 				valueLength = value.size();
-			} else {
-                crashLog("lizard_client.cc creating RichACL from POSIX Line: %d",
-                         __LINE__);
+            }
+            else {
                 AttrReply attr_reply = LizardClient::getattr(ctx, ino);
                 RichACL generated_acl = RichACL::createFromMode(
                                     attr_reply.attr.st_mode & 0777,
@@ -2727,8 +2716,6 @@ void setxattr(Context &ctx, Inode ino, const char *name, const char *value,
 	int status;
 	uint8_t mode;
 
-    crashLog("lizard_client.cc setxattr name %s with value: %s and size: %d Line: %d",
-             name, value, size, __LINE__);
 	stats_inc(OP_SETXATTR);
 	if (debug_mode) {
 		oplog_printf(ctx, "setxattr (%lu,%s,%" PRIu64 ",%d) ...",
@@ -2821,8 +2808,6 @@ void setxattr(Context &ctx, Inode ino, const char *name, const char *value,
 #endif
 	(void)position;
 	status = choose_xattr_handler(name)->setxattr(ctx, ino, name, nleng, value, size, mode);
-    crashLog("lizard_client.cc choose_xattr_handler(%s) status = %d Line: %d",
-             name, status, __LINE__);
 	if (status != LIZARDFS_STATUS_OK) {
 		oplog_printf(ctx, "setxattr (%lu,%s,%" PRIu64 ",%d): %s",
 				(unsigned long int)ino,
@@ -2847,7 +2832,6 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 	const uint8_t *buff;
 	uint32_t leng;
 
-    crashLog("lizard_client.cc getxattr %s Line: %d", name, __LINE__);
 	stats_inc(OP_GETXATTR);
 	if (debug_mode) {
 		oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 ") ...",
@@ -2905,8 +2889,7 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 	}
 	(void)position;
 	status = choose_xattr_handler(name)->getxattr(ctx, ino, name, nleng, mode, leng, buffer);
-    crashLog("lizard_client.cc choose_xattr_handler(%s) status = %d Line: %d",
-             name, status, __LINE__);
+
 	buff = buffer.data();
 	if (status != LIZARDFS_STATUS_OK) {
 		oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): %s",
@@ -2932,7 +2915,6 @@ XattrReply getxattr(Context &ctx, Inode ino, const char *name, size_t size, uint
 					lizardfs_error_string(LIZARDFS_ERROR_ERANGE));
 			throw RequestException(LIZARDFS_ERROR_ERANGE);
 		} else {
-            crashLog("lizard_client.cc getxattr OK Line: %d", __LINE__);
 			oplog_printf(ctx, "getxattr (%lu,%s,%" PRIu64 "): OK (%" PRIu32 ")",
 					(unsigned long int)ino,
 					name,
